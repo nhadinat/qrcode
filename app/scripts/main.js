@@ -40,6 +40,7 @@
   };
 
   var QRCodeManager = function(element) {
+    // Create web worker in here
     var root = document.getElementById(element);
     var canvas = document.getElementById("qr-canvas");
     var qrcodeData = root.querySelector(".QRCodeSuccessDialog-data");
@@ -191,6 +192,8 @@
       if(self.onframe) self.onframe();
 
       coordinatesHaveChanged = false;
+
+      requestAnimationFrame(captureFrame.bind(self));
     };
 
     var getCamera = function(videoSource, cb) {
@@ -221,7 +224,7 @@
 
           var isSetup = setupVariables(e);
           if(isSetup) {
-            setInterval(captureFrame.bind(self), 4);
+            requestAnimationFrame(captureFrame.bind(self));
           }
           else {
             // This is just to get around the fact that the videoWidth is not
@@ -229,7 +232,7 @@
             setTimeout(function() {
               setupVariables(e);
 
-              setInterval(captureFrame.bind(self), 4);
+              requestAnimationFrame(captureFrame.bind(self));
             }, 100);
           }
 
