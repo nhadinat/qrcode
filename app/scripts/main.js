@@ -40,14 +40,13 @@
   };
 
   var QRCodeManager = function(element) {
-    // Create web worker in here
     var root = document.getElementById(element);
     var canvas = document.getElementById("qr-canvas");
     var qrcodeData = root.querySelector(".QRCodeSuccessDialog-data");
     var qrcodeNavigate = root.querySelector(".QRCodeSuccessDialog-navigate");
     var qrcodeIgnore = root.querySelector(".QRCodeSuccessDialog-ignore");
-
-    var client = new QRClient();
+    // Create web worker in here
+    var imageDecoderWorker = new Worker('scripts/jsqrcode/qrworker.js');
 
     var self = this;
 
@@ -55,14 +54,27 @@
 
 
     this.detectQRCode = function(imageData, callback) {
+
       callback = callback || function() {};
 
-      client.decode(imageData, function(result) {
-        if(result !== undefined) {
-          self.currentUrl = result;
+      imageDecoderWorker.postMessage(imageData);
+
+      imageDecoderWorker.onmessage = function(result) {
+        var url = result.data;
+        if(url !== undefined) {
+          self.currentUrl = url;
         }
-        callback(result);
-      });
+        callback(url);
+      }
+
+      imageDecoderWorker.onerror = function(error) {
+        function WorkerException(message) {
+          this.name = "WorkerException";
+          this.message = message;
+        };
+        throw new WorkerException('Decoder error');
+        callback(undefined);
+      };
     };
 
     this.showDialog = function(url) {
